@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 
 from .models import Flight, Booking, Profile
-
+import datetime
 
 class FlightSerializer(serializers.ModelSerializer):
 	class Meta:
@@ -50,9 +50,26 @@ class RegisterSerializer(serializers.ModelSerializer):
         new_user.save()
         return validated_data
 
-
-class ProfileSerializer(serializers.ModelSerializer):
+class ProfileSerializerUser(serializers.ModelSerializer):
+	
 	class Meta:
+		
+		model = User
+		fields = ['first_name', 'last_name',]
+
+	
+class ProfileSerializer(serializers.ModelSerializer):
+	user = ProfileSerializerUser()
+	past_bookings = serializers.SerializerMethodField()
+	class Meta:
+		
 		model = Profile
-		fields = ['user', 'miles']
+		fields = ['user', 'miles','past_bookings']
+
+	def get_past_bookings(self, obj):
+		user_obj = obj.user
+		booking_list = user_obj.bookings.all()
+		return BookingSerializer(booking_list, many=True).data 
+
+	
 
